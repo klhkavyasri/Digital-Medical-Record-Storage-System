@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DMRS - Real-Time Healthcare Portal</title>
+
+<style>
+
+/* GLOBAL */
+
+body{
+font-family: Arial;
+margin:0;
+background:#f5f0fa;
+color:#4b3b7f;
+}
+
+header{
+background:#c5a3e1;
+color:white;
+padding:20px;
+text-align:center;
+font-size:24px;
+}
+
+/* LOGIN */
+
+#loginPage{
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:90vh;
+}
+
+#loginPage input,
+#loginPage select,
+#loginPage button{
+padding:12px;
+margin:10px 0;
+width:280px;
+border-radius:8px;
+border:1px solid #d6c7f2;
+font-size:16px;
+}
+
+#loginPage button{
+background:#b39ddb;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+nav{
+background:#b39ddb;
+display:flex;
+gap:25px;
+padding:15px;
+}
+
+nav a{
+color:white;
+text-decoration:none;
+font-weight:bold;
+cursor:pointer;
+}
+
+/* PAGES */
+
+.page{
+display:none;
+padding:30px;
+}
+
+.active{
+display:block;
+}
+
+/* DASHBOARD */
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:30px;
+margin-top:20px;
+}
+
+.card{
+background:white;
+padding:30px;
+text-align:center;
+box-shadow:0 3px 15px rgba(0,0,0,0.1);
+border-left:6px solid #c5a3e1;
+border-radius:10px;
+}
+
+/* FORMS */
+
+.formBox{
+background:white;
+padding:25px;
+margin-bottom:25px;
+box-shadow:0 3px 12px rgba(0,0,0,0.1);
+max-width:500px;
+border-radius:12px;
+}
+
+input,select,textarea{
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:1px solid #d6c7f2;
+}
+
+button{
+padding:10px 20px;
+background:#b39ddb;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* TABLE */
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th,td{
+border-bottom:1px solid #eee;
+padding:12px;
+text-align:center;
+}
+
+th{
+background:#e8def8;
+}
+
+/* FILES */
+
+.fileItem{
+margin:10px 0;
+padding:10px;
+background:#f3e5f5;
+display:flex;
+justify-content:space-between;
+border-radius:6px;
+}
+
+/* NOTIFICATION */
+
+#notification{
+position:fixed;
+top:10px;
+right:10px;
+background:#d1c4e9;
+padding:12px 20px;
+border-radius:8px;
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>DMRS - Real-Time Healthcare Portal</header>
+
+<div id="notification"></div>
+
+<!-- LOGIN -->
+
+<div id="loginPage">
+
+<h2>Login</h2>
+
+<select id="loginRole">
+<option value="doctor">Doctor</option>
+<option value="patient">Patient</option>
+</select>
+
+<input type="text" id="loginUsername" placeholder="Username">
+<input type="password" id="loginPassword" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+</div>
+
+<!-- NAVBAR -->
+
+<nav id="navBar" style="display:none">
+
+<a onclick="showPage('dashboard')">Dashboard</a>
+<a onclick="showPage('patients')">Patients</a>
+<a onclick="showPage('records')">Medical Files</a>
+<a onclick="showPage('logs')">Activity Logs</a>
+<a onclick="logout()">Logout</a>
+
+</nav>
+
+<!-- DASHBOARD -->
+
+<div id="dashboard" class="page">
+
+<h2>Dashboard</h2>
+
+<div class="grid">
+
+<div class="card">
+<h3>Total Patients</h3>
+<p id="totalPatients">0</p>
+</div>
+
+<div class="card">
+<h3>Total Files</h3>
+<p id="totalFiles">0</p>
+</div>
+
+<div class="card">
+<h3>Recent Uploads</h3>
+<p id="recentUploads">0</p>
+</div>
+
+</div>
+
+</div>
+
+<!-- PATIENTS -->
+
+<div id="patients" class="page">
+
+<h2>Patient Management</h2>
+
+<div class="formBox" id="doctorOnly">
+
+<input id="name" placeholder="Patient Name">
+<input id="age" type="number" placeholder="Age">
+<textarea id="notes" placeholder="Medical Notes"></textarea>
+
+<button onclick="addPatient()">Add Patient</button>
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Age</th>
+<th>Files</th>
+<th>Notes</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="patientTable"></tbody>
+
+</table>
+
+</div>
+
+<!-- FILE UPLOAD -->
+
+<div id="records" class="page">
+
+<h2>Upload Medical Files</h2>
+
+<div class="formBox">
+
+<select id="patientSelect"></select>
+
+<select id="role">
+<option value="doctor">Doctor</option>
+<option value="patient">Patient</option>
+</select>
+
+<select id="fileCategory">
+<option>Lab Report</option>
+<option>Prescription</option>
+<option>X-Ray</option>
+</select>
+
+<input type="file" id="fileInput">
+
+<button onclick="uploadFile()">Upload</button>
+
+</div>
+
+<h3>Uploaded Files</h3>
+
+<div id="fileList"></div>
+
+</div>
+
+<!-- LOGS -->
+
+<div id="logs" class="page">
+
+<h2>Activity Logs</h2>
+
+<button onclick="clearLogs()">Clear Logs</button>
+
+<table>
+
+<thead>
+<tr>
+<th>Time</th>
+<th>User</th>
+<th>Role</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="activityLog"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+/* DATABASE */
+
+let users = JSON.parse(localStorage.getItem("users")) || [
+{role:"doctor",username:"admin",password:"admin123"},
+{role:"patient",username:"patient1",password:"pass1",patientIndex:0}
+]
+
+let patients = JSON.parse(localStorage.getItem("patients")) || []
+let logs = JSON.parse(localStorage.getItem("logs")) || []
+
+let currentUser=null
+
+function save(){
+localStorage.setItem("patients",JSON.stringify(patients))
+localStorage.setItem("logs",JSON.stringify(logs))
+}
+
+/* NOTIFICATION */
+
+function notify(msg){
+
+let n=document.getElementById("notification")
+n.innerText=msg
+n.style.display="block"
+
+setTimeout(()=>{
+n.style.display="none"
+},3000)
+
+}
+
+/* LOGIN */
+
+function login(){
+
+let role=document.getElementById("loginRole").value
+let username=document.getElementById("loginUsername").value
+let password=document.getElementById("loginPassword").value
+
+let user=users.find(u=>u.username===username && u.password===password && u.role===role)
+
+if(user){
+
+currentUser=user
+
+document.getElementById("loginPage").style.display="none"
+document.getElementById("navBar").style.display="flex"
+
+showPage("dashboard")
+
+displayPatients()
+populateSelect()
+displayFiles()
+displayLogs()
+updateDashboard()
+
+}else{
+alert("Invalid credentials")
+}
+
+}
+
+/* LOGOUT */
+
+function logout(){
+
+currentUser=null
+
+document.getElementById("loginPage").style.display="flex"
+document.getElementById("navBar").style.display="none"
+
+}
+
+/* PAGE NAV */
+
+function showPage(page){
+
+document.querySelectorAll(".page").forEach(p=>{
+p.classList.remove("active")
+})
+
+document.getElementById(page).classList.add("active")
+
+}
+
+/* ADD PATIENT */
+
+function addPatient(){
+
+let name=document.getElementById("name").value
+let age=document.getElementById("age").value
+let notes=document.getElementById("notes").value
+
+if(!name || !age){
+alert("Enter details")
+return
+}
+
+patients.push({
+name,
+age,
+notes,
+files:[]
+})
+
+logs.push({
+time:new Date().toLocaleString(),
+user:currentUser.username,
+role:"Doctor",
+action:"Added patient "+name
+})
+
+save()
+
+displayPatients()
+populateSelect()
+updateDashboard()
+displayLogs()
+
+notify("Patient added")
+
+}
+
+/* DELETE PATIENT */
+
+function deletePatient(i){
+
+if(confirm("Delete patient?")){
+
+let removed=patients.splice(i,1)[0]
+
+logs.push({
+time:new Date().toLocaleString(),
+user:currentUser.username,
+role:"Doctor",
+action:"Deleted "+removed.name
+})
+
+save()
+
+displayPatients()
+populateSelect()
+updateDashboard()
+displayLogs()
+
+notify("Patient deleted")
+
+}
+
+}
+
+/* DISPLAY PATIENTS */
+
+function displayPatients(){
+
+let table=document.getElementById("patientTable")
+
+table.innerHTML=""
+
+patients.forEach((p,i)=>{
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${p.name}</td>
+<td>${p.age}</td>
+<td>${p.files.length}</td>
+<td>${p.notes}</td>
+
+<td>
+<button onclick="deletePatient(${i})">Delete</button>
+</td>
+
+</tr>
+
+`
+
+})
+
+}
+
+/* SELECT PATIENT */
+
+function populateSelect(){
+
+let select=document.getElementById("patientSelect")
+
+select.innerHTML=""
+
+patients.forEach((p,i)=>{
+
+let opt=document.createElement("option")
+
+opt.value=i
+opt.textContent=p.name
+
+select.appendChild(opt)
+
+})
+
+}
+
+/* UPLOAD FILE */
+
+function uploadFile(){
+
+let index=document.getElementById("patientSelect").value
+let role=document.getElementById("role").value
+let category=document.getElementById("fileCategory").value
+let file=document.getElementById("fileInput").files[0]
+
+if(!file){
+alert("Select file")
+return
+}
+
+let reader=new FileReader()
+
+reader.onload=function(){
+
+patients[index].files.push({
+
+name:file.name,
+data:reader.result,
+role,
+category,
+date:new Date().toLocaleString()
+
+})
+
+logs.push({
+
+time:new Date().toLocaleString(),
+user:currentUser.username,
+role:role,
+action:"Uploaded "+file.name
+
+})
+
+save()
+
+displayFiles()
+updateDashboard()
+displayLogs()
+
+notify("File uploaded")
+
+}
+
+reader.readAsDataURL(file)
+
+}
+
+/* DISPLAY FILES */
+
+function displayFiles(){
+
+let list=document.getElementById("fileList")
+
+list.innerHTML=""
+
+patients.forEach((p,pi)=>{
+
+p.files.forEach((f,fi)=>{
+
+list.innerHTML+=`
+
+<div class="fileItem">
+
+<span>
+<b>${p.name}</b> - ${f.name}
+</span>
+
+<a href="${f.data}" download="${f.name}">Download</a>
+
+</div>
+
+`
+
+})
+
+})
+
+}
+
+/* DASHBOARD */
+
+function updateDashboard(){
+
+document.getElementById("totalPatients").innerText=patients.length
+
+let total=0
+
+patients.forEach(p=>{
+total+=p.files.length
+})
+
+document.getElementById("totalFiles").innerText=total
+
+}
+
+/* LOGS */
+
+function displayLogs(){
+
+let table=document.getElementById("activityLog")
+
+table.innerHTML=""
+
+logs.slice().reverse().forEach(l=>{
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${l.time}</td>
+<td>${l.user}</td>
+<td>${l.role}</td>
+<td>${l.action}</td>
+
+</tr>
+
+`
+
+})
+
+}
+
+/* CLEAR LOGS */
+
+function clearLogs(){
+
+logs=[]
+localStorage.removeItem("logs")
+
+displayLogs()
+
+}
+
+</script>
+
+</body>
+</html>
